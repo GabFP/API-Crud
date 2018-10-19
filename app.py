@@ -1,5 +1,5 @@
 from flask import Flask, jsonify, request
-from BDconection import BD
+from BDconection import BD, printdrivers
 import CRUD
 app = Flask(__name__)
 
@@ -13,7 +13,7 @@ bd = BD(server, user, senha, nomebd)
 
 @app.route('/', methods=['POST', 'GET'])
 def index():
-    return "teste"
+    return printdrivers()
 
 
 @app.route('/create/<tabela>/', methods=['POST', 'GET'])

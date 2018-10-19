@@ -13,7 +13,10 @@ class BD:
                                'UID={};PWD={}'.format('ODBC Driver 13 for SQL Server', server, nomebd, user, senha))
         self.con = conne
         self.cursor = conne.cursor()
-        print("confirme")
+
+
+def printdrivers():
+    return pyodbc.drivers()
 
 
 
