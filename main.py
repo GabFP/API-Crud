@@ -8,8 +8,6 @@ user = 'mbonesso'
 senha = '@Math628438'
 nomebd = 'BlackBird_DB'
 
-bd = BD(server, user, senha, nomebd)
-
 
 @app.route('/', methods=['POST', 'GET'])
 def index():
@@ -18,6 +16,7 @@ def index():
 
 @app.route('/create/<tabela>/', methods=['POST', 'GET'])
 def create(tabela):
+    bd = BD(server, user, senha, nomebd)
     if tabela == 'evento':
         content = request.get_json()
         titulo = content['titulo']
@@ -50,6 +49,7 @@ def create(tabela):
 
 @app.route("/read/<tabela>/", methods=['POST', 'GET'])
 def read(tabela):
+    bd = BD(server, user, senha, nomebd)
     if tabela == "evento":
         lido = CRUD.readevento(bd)
 
@@ -72,6 +72,7 @@ def read(tabela):
 
 @app.route("/update/<tabela>/", methods=['POST', 'GET'])
 def update(tabela):
+    bd = BD(server, user, senha, nomebd)
     if tabela == "evento":
         con = request.get_json()
         token_evento = con["data"]+con["id"]
@@ -86,6 +87,7 @@ def update(tabela):
 
 @app.route("/delete/<tabela>/", methods=['POST', 'GET'])
 def delete(tabela):
+    bd = BD(server, user, senha, nomebd)
     if tabela == "evento":
         con = request.get_json()
         CRUD.deletaevento(bd, con["id"])

@@ -10,7 +10,7 @@ class BD:
         self.senha = senha
         self.nomebd = nomebd
         conne = pyodbc.connect('DRIVER={};SERVER={};PORT=1433;DATABASE={};'
-                               'UID={};PWD={}'.format('ODBC Driver 13 for SQL Server', server, nomebd, user, senha))
+                               'UID={};PWD={}'.format('ODBC Driver 11 for SQL Server', server, nomebd, user, senha))
         self.con = conne
         self.cursor = conne.cursor()
 
