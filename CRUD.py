@@ -19,23 +19,46 @@ def crearevento(bd, titulo, categoria_atividade, descricao, palestrante, data, h
 def readevento(bd):
     dicio = []
     dic = bd.cursor.execute("SELECT * FROM [dbo].[evento] ORDER BY [evento].[data]").fetchall()
+    bd.cursor.commit()
     for i in dic:
-         dicio.append({
-                "id": f"{i[0]}",
-                "titulo": f"{i[1]}",
-                "categoria_atividade": f"{i[2]}",
-                "descricao": f"{i[3]}",
-                "palestrante": f"{i[4]}",
-                "data": f"{i[5]}",
-                "horario": f"{i[6]}",
-                "duracao": f"{i[7]}",
-                "local": f"{i[8]}",
-                "quantidade_vagas": f"{i[9]}",
-                "info_complementar": f"{i[10]}",
-                "token_evento": f"{i[11]}",
-                "encerrado": f"{i[12]}"
-            })
+        dicio.append({
+            "id": f"{i[0]}",
+            "titulo": f"{i[1]}",
+            "categoria_atividade": f"{i[2]}",
+            "descricao": f"{i[3]}",
+            "palestrante": f"{i[4]}",
+            "data": f"{i[5]}",
+            "horario": f"{i[6]}",
+            "duracao": f"{i[7]}",
+            "local": f"{i[8]}",
+            "quantidade_vagas": f"{i[9]}",
+            "info_complementar": f"{i[10]}",
+            "token_evento": f"{i[11]}",
+            "encerrado": f"{i[12]}"
+        })
 
+    return dicio
+
+
+def readeventotoken(bd, tke):
+    dic = bd.cursor.execute("SELECT * FROM [dbo].[evento] WHERE [token_evento]={}".format(tke)).fetchall()
+    bd.cursor.commit()
+    for i in dic:
+        dicio = {
+            "id": f"{i[0]}",
+            "titulo": f"{i[1]}",
+            "categoria_atividade": f"{i[2]}",
+            "descricao": f"{i[3]}",
+            "palestrante": f"{i[4]}",
+            "data": f"{i[5]}",
+            "horario": f"{i[6]}",
+            "duracao": f"{i[7]}",
+            "local": f"{i[8]}",
+            "quantidade_vagas": f"{i[9]}",
+            "info_complementar": f"{i[10]}",
+            "token_evento": f"{i[11]}",
+            "encerrado": f"{i[12]}"
+        }
     return dicio
 
 
@@ -108,7 +131,7 @@ def deletepessoa(bd, ra):
     bd.cursor.commit()
 
 
-def createcategoria_atividade(bd, id, titulo, descricao):
+def createcategoria_atividade(bd, titulo, descricao):
     bd.cursor.execute("""
     INSERT INTO [dbo].[categoria_atividade]
            ([titulo],[descricao])
@@ -129,4 +152,17 @@ def readcategoria_atividade(bd):
             "titulo": f"{i[1]}",
             "descricao": f"{i[2]}"
         })
+    return dicio
+
+
+def readtipo_pessoa(bd, id):
+    lido = bd.cursor.execute(""""
+        SELECT * FROM [dbo].[tipo_pessoa]
+        WHERE [id]={}""".format(id)).fetchall()
+    for i in lido:
+        dicio = {
+            "id": f"{i[0]}",
+            "titulo": f"{i[1]}",
+            "ativo": f"{i[2]}"
+        }
     return dicio

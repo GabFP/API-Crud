@@ -4,6 +4,7 @@ from BDconection import BD
 import pyodbc
 import CRUD
 import time
+import re
 
 
 app = Flask(__name__)
@@ -30,11 +31,11 @@ def login():
             return "não conectou com o BD"
         try:
             content = request.get_json()
+            ra = content['ra']
+            rasenha = content['senha']
+            local = content['login']
         except TypeError:
             return "não identificou json"
-        ra = content['ra']
-        rasenha = content['senha']
-        local = content['login']
         try:
             lido = CRUD.readpessoa(bd, ra)
         except UnboundLocalError:
@@ -46,7 +47,9 @@ def login():
                 return response
             else:
                 response = current_app.make_response("sucesso")
-                response.set_cookie('login_token', value=f'{lido["senha"]+ra}', expires=time.time()+30*60)
+                neolido = CRUD.readtipo_pessoa(bd, lido['tipo_pessoa'])
+                response.set_cookie('login_token',
+                                    value=f'{lido["senha"]+ra+neolido["titulo"]}', expires=time.time()+30*60)
                 return response
         else:
             return "senha ou ra errados"
@@ -72,19 +75,19 @@ def create(tabela):
         if tabela == 'evento':
             try:
                 content = request.get_json()
+                titulo = content['titulo']
+                categoria_atividade = "SELECT id from dbo.categoria_atividade WHERE id='{}'".format(
+                    content['categoria_atividade'])
+                descricao = content['descricao']
+                palestrante = content['palestrante']
+                data = content['data']
+                horario = content['horario']
+                duracao = content['duracao']
+                local = content['local']
+                quantidade_vagas = content['quantidade_vagas']
+                info_complementar = content['info_complementar']
             except TypeError:
                 return "não identificou json"
-            titulo = content['titulo']
-            categoria_atividade = "SELECT id from dbo.categoria_atividade WHERE id='{}'".format(
-                content['categoria_atividade'])
-            descricao = content['descricao']
-            palestrante = content['palestrante']
-            data = content['data']
-            horario = content['horario']
-            duracao = content['duracao']
-            local = content['local']
-            quantidade_vagas = content['quantidade_vagas']
-            info_complementar = content['info_complementar']
             token_evento = 0
             encerrado = 0
             CRUD.crearevento(bd, titulo, categoria_atividade, descricao, palestrante, data, horario, duracao, local,
@@ -93,18 +96,19 @@ def create(tabela):
         elif tabela == "categoria_atividade":
             try:
                 content = request.get_json()
+                titulo = content["titulo"]
+                descricao = content["descricao"]
             except TypeError:
                 return "não identificou json"
-
-            titulo = content["titulo"]
-            descricao = content["descricao"]
-            CRUD.createcategoria_atividade(bd, id, titulo, descricao)
+            CRUD.createcategoria_atividade(bd, titulo, descricao)
 
             return "criado"
         else:
             return "tabela não encontrada", 404
-    else:
+    elif 'login_token' not in request.cookies:
         return "não logado"
+    else:
+        return "não tem permição"
 
 
 @app.route("/read/<tabela>/", methods=['POST', 'GET'])
@@ -114,18 +118,27 @@ def read(tabela):
             bd = BD(server, user, senha, nomebd)
         except pyodbc.OperationalError:
             return "não conectou com o BD"
+        pattern = re.compile("[0-9]{9,11}")
         if tabela == "evento":
             lido = CRUD.readevento(bd)
             return jsonify(lido)
         elif tabela == "pessoa":
             try:
                 content = request.get_json()
+                lido = CRUD.readpessoa(bd, content["ra"])
             except TypeError:
                 return "não identificou json"
-            lido = CRUD.readpessoa(bd, content["ra"])
+            except UnboundLocalError:
+                return "ra não encontrado"
             return jsonify(lido)
         elif tabela == "categoria_atividade":
             lido = CRUD.readcategoria_atividade(bd)
+            return jsonify(lido)
+        elif re.match(pattern, tabela):
+            try:
+                lido = CRUD.readeventotoken(bd, tabela)
+            except UnboundLocalError:
+                return "token_evento não encontrado"
             return jsonify(lido)
         else:
             return "tabela não encontrada", 404
@@ -135,7 +148,7 @@ def read(tabela):
 
 @app.route("/update/<tabela>/", methods=['POST', 'GET'])
 def update(tabela):
-    if 'login_token' in request.cookies:
+    if 'login_token' in request.cookies and 'web' in request.cookies['login_token']:
         try:
             bd = BD(server, user, senha, nomebd)
         except pyodbc.OperationalError:
@@ -143,33 +156,43 @@ def update(tabela):
         if tabela == "evento":
             con = request.get_json()
             token_evento = con["data"]+con["id"]
-            CRUD.updateevento(bd, con["id"], con["titulo"], con["descricao"], con["palestrante"],
-                              con["data"], con["horario"], con["duracao"], con["local"],
-                              con["quantidade_vagas"], con["info_complementar"],
-                              token_evento, con["encerrado"])
+            try:
+                CRUD.updateevento(bd, con["id"], con["titulo"], con["descricao"], con["palestrante"],
+                                  con["data"], con["horario"], con["duracao"], con["local"],
+                                  con["quantidade_vagas"], con["info_complementar"],
+                                  token_evento, con["encerrado"])
+            except UnboundLocalError:
+                return "id não encontrado"
             return "atualizado"
         else:
             return "tabela não encontrada", 404
-    else:
+    elif 'login_token' not in request.cookies:
         return "não logado"
+    else:
+        return "não tem permição"
 
 
 @app.route("/delete/<tabela>/", methods=['POST', 'GET'])
 def delete(tabela):
-    if 'login_token' in request.cookies:
+    if 'login_token' in request.cookies and 'web' in request.cookies['login_token']:
         try:
             bd = BD(server, user, senha, nomebd)
         except pyodbc.OperationalError:
             return "não conectou com o BD"
         if tabela == "evento":
             con = request.get_json()
-            CRUD.deletaevento(bd, con["id"])
+            try:
+                CRUD.deletaevento(bd, con["id"])
+            except UnboundLocalError:
+                return "id não encontrado"
             return "deletado"
         else:
             return "tabela não encontrada", 404
-    else:
+    elif 'login_token' not in request.cookies:
         return "não logado"
+    else:
+        return "não tem permição"
 
 
 if __name__ == "__main__":
-    app.run()
+    app.run('0.0.0.0')
