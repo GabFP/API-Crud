@@ -23,16 +23,16 @@ def readevento(bd):
          dicio.append({
                 "id": f"{i[0]}",
                 "titulo": f"{i[1]}",
-                "categoria atividade": f"{i[2]}",
+                "categoria_atividade": f"{i[2]}",
                 "descricao": f"{i[3]}",
                 "palestrante": f"{i[4]}",
                 "data": f"{i[5]}",
                 "horario": f"{i[6]}",
                 "duracao": f"{i[7]}",
                 "local": f"{i[8]}",
-                "quantidade vagas": f"{i[9]}",
-                "info complementar": f"{i[10]}",
-                "token evento": f"{i[11]}",
+                "quantidade_vagas": f"{i[9]}",
+                "info_complementar": f"{i[10]}",
+                "token_evento": f"{i[11]}",
                 "encerrado": f"{i[12]}"
             })
 
@@ -118,8 +118,15 @@ def createcategoria_atividade(bd, id, titulo, descricao):
 
 
 def readcategoria_atividade(bd):
+    dicio = []
     lido = bd.cursor.execute("""
     SELECT * FROM [dbo].[categoria_atividade]
     """).fetchall()
     bd.cursor.commit()
-    return lido
+    for i in lido:
+        dicio.append({
+            "id": f"{i[0]}",
+            "titulo": f"{i[1]}",
+            "descricao": f"{i[2]}"
+        })
+    return dicio
